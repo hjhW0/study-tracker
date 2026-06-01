@@ -1,129 +1,141 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study Tracker</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Study Tracker</title>
+        <meta name="theme-color" content="#6366f1" />
+        <link rel="manifest" href="manifest.json" />
+        <link rel="icon" href="icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="icons/icon-192.png" />
+        <link rel="stylesheet" href="css/base.css" />
+        <link rel="stylesheet" href="css/dashboard.css" />
+        <link rel="stylesheet" href="css/task.css" />
+        <link rel="stylesheet" href="css/stats.css" />
+        <link rel="stylesheet" href="css/animation.css" />
+    </head>
+    <body>
+        <div class="container">
+            <!-- 顶部仪表盘 -->
+            <header class="dashboard">
+                <div class="dashboard-title">
+                    <h1>📚 Study Tracker</h1>
+                    <p class="motto" id="motto"></p>
+                </div>
+                <div class="dashboard-cards">
+                    <!-- 圆环进度条 -->
+                    <div class="dash-card progress-ring-card">
+                        <svg class="progress-ring" viewBox="0 0 100 100">
+                            <circle class="ring-bg" cx="50" cy="50" r="42" />
+                            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" />
+                        </svg>
+                        <div class="ring-center">
+                            <span class="ring-percent" id="ringPercent">0%</span>
+                            <span class="ring-label">今日</span>
+                        </div>
+                    </div>
+                    <!-- 连续打卡 -->
+                    <div class="dash-card streak-card">
+                        <span class="streak-icon">🔥</span>
+                        <span class="streak-num" id="streakNum">0</span>
+                        <span class="streak-label">连续打卡</span>
+                    </div>
+                    <!-- 每日任务数 -->
+                    <div class="dash-card count-card">
+                        <span class="count-icon">📅</span>
+                        <span class="count-num" id="dailyDashCount">0</span>
+                        <span class="count-label">每日任务</span>
+                    </div>
+                    <!-- 长期任务数 -->
+                    <div class="dash-card count-card">
+                        <span class="count-icon">🎯</span>
+                        <span class="count-num" id="longtermDashCount">0</span>
+                        <span class="count-label">长期任务</span>
+                    </div>
+                </div>
+            </header>
 
-    <!-- 顶部仪表盘 -->
-    <header class="dashboard">
-      <div class="dashboard-title">
-        <h1>📚 Study Tracker</h1>
-        <p class="motto" id="motto"></p>
-      </div>
-      <div class="dashboard-cards">
-        <!-- 圆环进度条 -->
-        <div class="dash-card progress-ring-card">
-          <svg class="progress-ring" viewBox="0 0 100 100">
-            <circle class="ring-bg" cx="50" cy="50" r="42" />
-            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" />
-          </svg>
-          <div class="ring-center">
-            <span class="ring-percent" id="ringPercent">0%</span>
-            <span class="ring-label">今日</span>
-          </div>
+            <!-- Tab 切换 -->
+            <div class="tabs">
+                <button class="tab active" data-type="daily">
+                    <span class="tab-icon">📅</span>
+                    每日
+                    <span class="tab-badge" id="dailyBadge">0</span>
+                </button>
+                <button class="tab" data-type="longterm">
+                    <span class="tab-icon">🎯</span>
+                    长期
+                    <span class="tab-badge" id="longtermBadge">0</span>
+                </button>
+                <button class="tab" data-type="stats">
+                    <span class="tab-icon">📊</span>
+                    统计
+                </button>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-area">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="搜索任务..." />
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area glass-card" id="inputArea">
+                <input type="text" id="taskInput" placeholder="添加新任务..." autofocus />
+                <div class="input-options">
+                    <select id="prioritySelect">
+                        <option value="medium">🟡 中</option>
+                        <option value="high">🔴 高</option>
+                        <option value="low">🟢 低</option>
+                    </select>
+                    <input type="date" id="deadlineInput" class="deadline-input" title="截止日期" />
+                    <button id="addBtn">＋ 添加</button>
+                    remote add origin https://github
+                </div>
+            </div>
+
+            <!-- 每日任务列表 -->
+            <div id="dailySection" class="task-section">
+                <div id="dailyList" class="task-list"></div>
+                <div id="dailyEmpty" class="empty-state">
+                    <span class="empty-icon">✨</span>
+                    <p>还没有每日任务</p>
+                    <p class="empty-sub">添加你今天要做的事吧</p>
+                </div>
+            </div>
+
+            <!-- 长期任务列表 -->
+            <div id="longtermSection" class="task-section hidden">
+                <div id="longtermList" class="task-list"></div>
+                <div id="longtermEmpty" class="empty-state">
+                    <span class="empty-icon">🎯</span>
+                    <p>还没有长期任务</p>
+                    <p class="empty-sub">设定一个目标，开始行动</p>
+                </div>
+            </div>
+
+            <!-- 统计页面 -->
+            <div id="statsSection" class="task-section hidden">
+                <div class="stats-card glass-card">
+                    <h3>📈 最近7天完成率</h3>
+                    <div class="week-chart" id="weekChart"></div>
+                </div>
+                <div class="stats-card glass-card">
+                    <h3>📊 本月统计</h3>
+                    <div class="month-stats" id="monthStats"></div>
+                </div>
+                <div class="stats-card glass-card">
+                    <h3>🗓️ 每日完成率记录</h3>
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </div>
         </div>
-        <!-- 连续打卡 -->
-        <div class="dash-card streak-card">
-          <span class="streak-icon">🔥</span>
-          <span class="streak-num" id="streakNum">0</span>
-          <span class="streak-label">连续打卡</span>
-        </div>
-        <!-- 每日任务数 -->
-        <div class="dash-card count-card">
-          <span class="count-icon">📅</span>
-          <span class="count-num" id="dailyDashCount">0</span>
-          <span class="count-label">每日任务</span>
-        </div>
-        <!-- 长期任务数 -->
-        <div class="dash-card count-card">
-          <span class="count-icon">🎯</span>
-          <span class="count-num" id="longtermDashCount">0</span>
-          <span class="count-label">长期任务</span>
-        </div>
-      </div>
-    </header>
 
-    <!-- Tab 切换 -->
-    <div class="tabs">
-      <button class="tab active" data-type="daily">
-        <span class="tab-icon">📅</span>
-        每日
-        <span class="tab-badge" id="dailyBadge">0</span>
-      </button>
-      <button class="tab" data-type="longterm">
-        <span class="tab-icon">🎯</span>
-        长期
-        <span class="tab-badge" id="longtermBadge">0</span>
-      </button>
-      <button class="tab" data-type="stats">
-        <span class="tab-icon">📊</span>
-        统计
-      </button>
-    </div>
-
-    <!-- 搜索栏 -->
-    <div class="search-area">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="搜索任务...">
-    </div>
-
-    <!-- 输入区域 -->
-    <div class="input-area glass-card" id="inputArea">
-      <input type="text" id="taskInput" placeholder="添加新任务..." autofocus>
-      <div class="input-options">
-        <select id="prioritySelect">
-          <option value="medium">🟡 中</option>
-          <option value="high">🔴 高</option>
-          <option value="low">🟢 低</option>
-        </select>
-        <input type="date" id="deadlineInput" class="deadline-input" title="截止日期">
-        <button id="addBtn">＋ 添加</button>
-      </div>
-    </div>
-
-    <!-- 每日任务列表 -->
-    <div id="dailySection" class="task-section">
-      <div id="dailyList" class="task-list"></div>
-      <div id="dailyEmpty" class="empty-state">
-        <span class="empty-icon">✨</span>
-        <p>还没有每日任务</p>
-        <p class="empty-sub">添加你今天要做的事吧</p>
-      </div>
-    </div>
-
-    <!-- 长期任务列表 -->
-    <div id="longtermSection" class="task-section hidden">
-      <div id="longtermList" class="task-list"></div>
-      <div id="longtermEmpty" class="empty-state">
-        <span class="empty-icon">🎯</span>
-        <p>还没有长期任务</p>
-        <p class="empty-sub">设定一个目标，开始行动</p>
-      </div>
-    </div>
-
-    <!-- 统计页面 -->
-    <div id="statsSection" class="task-section hidden">
-      <div class="stats-card glass-card">
-        <h3>📈 最近7天完成率</h3>
-        <div class="week-chart" id="weekChart"></div>
-      </div>
-      <div class="stats-card glass-card">
-        <h3>📊 本月统计</h3>
-        <div class="month-stats" id="monthStats"></div>
-      </div>
-      <div class="stats-card glass-card">
-        <h3>🗓️ 每日完成率记录</h3>
-        <div class="history-list" id="historyList"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <script type="module" src="src/app.js"></script>
-</body>
+        <script type="module" src="src/app.js"></script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js');
+            }
+        </script>
+    </body>
 </html>

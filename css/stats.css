@@ -1,0 +1,172 @@
+/* ========================================
+   STATS PAGE
+======================================== */
+.stats-card {
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.stats-card h3 {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+/* ---- 7天柱状图 ---- */
+.week-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 150px;
+    gap: 10px;
+    padding: 0 4px;
+}
+
+.chart-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.chart-bar {
+    width: 100%;
+    max-width: 36px;
+    border-radius: 6px 6px 2px 2px;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 3px;
+}
+
+.chart-bar.rate-high {
+    background: linear-gradient(to top, #10b981, #34d399);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.chart-bar.rate-mid {
+    background: linear-gradient(to top, #f59e0b, #fbbf24);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.chart-bar.rate-low {
+    background: linear-gradient(to top, #ef4444, #f87171);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.chart-bar.rate-none {
+    background: var(--border-light);
+}
+
+.chart-label {
+    font-size: var(--font-xs);
+    color: var(--text-placeholder);
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.chart-value {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+/* ---- 月度统计 ---- */
+.month-stats .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--font-base);
+}
+
+.month-stats .stat-row:last-child {
+    border-bottom: none;
+}
+
+.month-stats .stat-label {
+    color: var(--text-placeholder);
+}
+
+.month-stats .stat-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ---- 历史记录 ---- */
+.history-list {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: var(--text-disabled);
+    border-radius: 4px;
+}
+
+.history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8fafc;
+    font-size: var(--font-sm);
+}
+
+.history-row:last-child {
+    border-bottom: none;
+}
+
+.history-date {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.history-bar-wrapper {
+    flex: 1;
+    margin: 0 14px;
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.history-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.history-bar.rate-high {
+    background: var(--success);
+}
+
+.history-bar.rate-mid {
+    background: var(--warning);
+}
+
+.history-bar.rate-low {
+    background: var(--danger);
+}
+
+.history-rate {
+    font-weight: 600;
+    min-width: 40px;
+    text-align: right;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.no-data {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-disabled);
+    font-size: var(--font-base);
+}

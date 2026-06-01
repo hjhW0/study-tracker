@@ -4,14 +4,14 @@
  */
 
 export const PRIORITY = {
-  HIGH: 'high',
-  MEDIUM: 'medium',
-  LOW: 'low'
+    HIGH: 'high',
+    MEDIUM: 'medium',
+    LOW: 'low',
 };
 
 export const TASK_TYPE = {
-  DAILY: 'daily',
-  LONGTERM: 'longterm'
+    DAILY: 'daily',
+    LONGTERM: 'longterm',
 };
 
 export const SUCCESS_RATE = 80; // 完成率 >= 此值算打卡成功

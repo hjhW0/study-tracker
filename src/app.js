@@ -23,65 +23,65 @@ const inputArea = document.getElementById('inputArea');
 
 // ---- Tab 切换 ----
 function switchTab(type) {
-  currentType = type;
+    currentType = type;
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.type === type);
-  });
+    document.querySelectorAll('.tab').forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.type === type);
+    });
 
-  document.getElementById('dailySection').classList.toggle('hidden', type !== 'daily');
-  document.getElementById('longtermSection').classList.toggle('hidden', type !== 'longterm');
-  document.getElementById('statsSection').classList.toggle('hidden', type !== 'stats');
+    document.getElementById('dailySection').classList.toggle('hidden', type !== 'daily');
+    document.getElementById('longtermSection').classList.toggle('hidden', type !== 'longterm');
+    document.getElementById('statsSection').classList.toggle('hidden', type !== 'stats');
 
-  inputArea.style.display = type === 'stats' ? 'none' : 'block';
-  deadlineInput.style.display = type === 'longterm' ? 'block' : 'none';
+    inputArea.style.display = type === 'stats' ? 'none' : 'block';
+    deadlineInput.style.display = type === 'longterm' ? 'block' : 'none';
 
-  if (type === 'stats') StatsPage.render();
+    if (type === 'stats') StatsPage.render();
 
-  TaskList.setType(type);
-  EventBus.emit(Events.TAB_SWITCHED, { type });
+    TaskList.setType(type);
+    EventBus.emit(Events.TAB_SWITCHED, { type });
 }
 
 // ---- 添加任务 ----
-function handleAdd() {
-  const content = taskInput.value.trim();
-  if (!content) return;
+async function handleAdd() {
+    const content = taskInput.value.trim();
+    if (!content) return;
 
-  TaskService.add(content, {
-    type: currentType,
-    priority: prioritySelect.value,
-    deadline: currentType === 'longterm' ? deadlineInput.value : null
-  });
+    await TaskService.add(content, {
+        type: currentType,
+        priority: prioritySelect.value,
+        deadline: currentType === 'longterm' ? deadlineInput.value : null,
+    });
 
-  taskInput.value = '';
-  deadlineInput.value = '';
-  taskInput.focus();
+    taskInput.value = '';
+    deadlineInput.value = '';
+    taskInput.focus();
 }
 
 // ---- 初始化 ----
-function init() {
-  TaskService.dailyReset();
-  StatsService.saveTodayProgress();
+async function init() {
+    await TaskService.dailyReset();
+    await StatsService.saveTodayProgress();
 
-  Dashboard.init();
-  TaskList.init();
+    Dashboard.init();
+    TaskList.init();
 
-  addBtn.addEventListener('click', handleAdd);
-  taskInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleAdd();
-  });
+    addBtn.addEventListener('click', handleAdd);
+    taskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleAdd();
+    });
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => switchTab(tab.dataset.type));
-  });
+    document.querySelectorAll('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.type));
+    });
 
-  searchInput.addEventListener('input', (e) => {
-    TaskList.setSearchKeyword(e.target.value.trim());
-  });
+    searchInput.addEventListener('input', (e) => {
+        TaskList.setSearchKeyword(e.target.value.trim());
+    });
 
-  deadlineInput.style.display = 'none';
-  Dashboard.render();
-  TaskList.render();
+    deadlineInput.style.display = 'none';
+    await Dashboard.render();
+    await TaskList.render();
 }
 
 init();

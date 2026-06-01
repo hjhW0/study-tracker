@@ -11,22 +11,22 @@
 const listeners = {};
 
 export const EventBus = {
-  on(event, fn) {
-    if (!listeners[event]) {
-      listeners[event] = [];
-    }
-    listeners[event].push(fn);
-  },
+    on(event, fn) {
+        if (!listeners[event]) {
+            listeners[event] = [];
+        }
+        listeners[event].push(fn);
+    },
 
-  off(event, fn) {
-    if (!listeners[event]) return;
-    listeners[event] = listeners[event].filter(f => f !== fn);
-  },
+    off(event, fn) {
+        if (!listeners[event]) return;
+        listeners[event] = listeners[event].filter((f) => f !== fn);
+    },
 
-  emit(event, data) {
-    if (!listeners[event]) return;
-    listeners[event].forEach(fn => fn(data));
-  }
+    emit(event, data) {
+        if (!listeners[event]) return;
+        listeners[event].forEach((fn) => fn(data));
+    },
 };
 
 /**
@@ -34,15 +34,15 @@ export const EventBus = {
  * 集中管理，避免拼写错误
  */
 export const Events = {
-  // 任务事件
-  TASK_ADDED:      'task:added',
-  TASK_TOGGLED:    'task:toggled',
-  TASK_DELETED:    'task:deleted',
-  TASKS_LOADED:    'task:loaded',
+    // 任务事件
+    TASK_ADDED: 'task:added',
+    TASK_TOGGLED: 'task:toggled',
+    TASK_DELETED: 'task:deleted',
+    TASKS_LOADED: 'task:loaded',
 
-  // 数据事件
-  DATA_CHANGED:    'data:changed',
+    // 数据事件
+    DATA_CHANGED: 'data:changed',
 
-  // 页面事件
-  TAB_SWITCHED:    'tab:switched',
+    // 页面事件
+    TAB_SWITCHED: 'tab:switched',
 };

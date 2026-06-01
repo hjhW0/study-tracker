@@ -1,62 +1,81 @@
 /**
- * 存储层
- * 只负责数据的读写，不含任何业务逻辑
- * 后期替换为 IndexedDB / 云同步时，只需改这个文件
+ * 存储层（接口 + Provider 模式）
+ *
+ * 职责：
+ * 1. 委托 provider 读写数据
+ * 2. 统一处理错误（调用方不需要 try/catch）
+ * 3. 业务逻辑（裁剪历史记录等）
+ *
+ * 返回格式：
+ *   load* → 数据（失败时返回 fallback）
+ *   save* → { success, error? }
+ *
+ * 切换后端只需：
+ *   Storage.use(YourProvider);
  */
 
 import { HISTORY_KEEP_DAYS } from './constants.js';
+import { LocalStorageProvider } from './providers/localStorageProvider.js';
 
 const TASKS_KEY = 'study-tracker-tasks';
 const HISTORY_KEY = 'study-tracker-history';
 const GOALS_KEY = 'study-tracker-goals';
 
+let _provider = LocalStorageProvider;
+
 export const Storage = {
-  // ---- 任务 ----
-  loadTasks() {
-    return this._get(TASKS_KEY, []);
-  },
+    use(provider) {
+        _provider = provider;
+    },
 
-  saveTasks(tasks) {
-    this._set(TASKS_KEY, tasks);
-  },
+    // ---- 任务 ----
+    async loadTasks() {
+        const result = await _provider.get(TASKS_KEY);
+        if (!result.success) {
+            console.error('加载任务失败:', result.error);
+            return [];
+        }
+        return result.data || [];
+    },
 
-  // ---- 历史记录 ----
-  loadHistory() {
-    return this._get(HISTORY_KEY, []);
-  },
+    async saveTasks(tasks) {
+        const result = await _provider.set(TASKS_KEY, tasks);
+        if (!result.success) console.error('保存任务失败:', result.error);
+        return result;
+    },
 
-  saveHistory(history) {
-    if (history.length > HISTORY_KEEP_DAYS) {
-      history = history.slice(history.length - HISTORY_KEEP_DAYS);
-    }
-    this._set(HISTORY_KEY, history);
-  },
+    // ---- 历史记录 ----
+    async loadHistory() {
+        const result = await _provider.get(HISTORY_KEY);
+        if (!result.success) {
+            console.error('加载历史失败:', result.error);
+            return [];
+        }
+        return result.data || [];
+    },
 
-  // ---- 目标 ----
-  loadGoals() {
-    return this._get(GOALS_KEY, []);
-  },
+    async saveHistory(history) {
+        if (history.length > HISTORY_KEEP_DAYS) {
+            history = history.slice(history.length - HISTORY_KEEP_DAYS);
+        }
+        const result = await _provider.set(HISTORY_KEY, history);
+        if (!result.success) console.error('保存历史失败:', result.error);
+        return result;
+    },
 
-  saveGoals(goals) {
-    this._set(GOALS_KEY, goals);
-  },
+    // ---- 目标 ----
+    async loadGoals() {
+        const result = await _provider.get(GOALS_KEY);
+        if (!result.success) {
+            console.error('加载目标失败:', result.error);
+            return [];
+        }
+        return result.data || [];
+    },
 
-  // ---- 内部方法 ----
-  _get(key, fallback) {
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : fallback;
-    } catch (e) {
-      console.error(`读取 ${key} 失败:`, e);
-      return fallback;
-    }
-  },
-
-  _set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-      console.error(`保存 ${key} 失败:`, e);
-    }
-  }
+    async saveGoals(goals) {
+        const result = await _provider.set(GOALS_KEY, goals);
+        if (!result.success) console.error('保存目标失败:', result.error);
+        return result;
+    },
 };
