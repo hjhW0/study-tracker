@@ -1,55 +1,27 @@
 /**
  * 仪表盘 UI
- * 负责顶部圆环进度条、连续打卡、任务数量等显示
+ * 负责顶部英雄卡片：问候语、进度条、统计数据
  */
 
 import { StatsService } from '../services/statsService.js';
 import { StreakService } from '../services/streakService.js';
 import { TaskService } from '../services/taskService.js';
 import { EventBus, Events } from '../utils/eventBus.js';
-import { getDayOfYear, getToday } from '../utils/date.js';
+import { getToday } from '../utils/date.js';
 
 // ---- DOM 缓存 ----
 let els = {};
 
-// ---- 每日一句 ----
-const MOTTOS = [
-    '📚 今天也要加油学习',
-    '🎯 离目标更近一步',
-    '💪 坚持就是胜利',
-    '🌟 每天进步一点点',
-    '📖 知识改变命运',
-    '🔥 保持专注，保持热爱',
-    '🚀 行动是成功的阶梯',
-    '🧠 学习是最好的投资',
-    '⭐ 今天的努力，明天的收获',
-    '💡 不积跬步，无以至千里',
-    '🎓 书山有路勤为径',
-    '🌈 越努力，越幸运',
-];
-
-// ---- 圆环常量 ----
-const RING_RADIUS = 42;
-const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
 export const Dashboard = {
     init() {
         els = {
-            ringFill: document.getElementById('ringFill'),
-            ringPercent: document.getElementById('ringPercent'),
-            streakNum: document.getElementById('streakNum'),
-            dailyDashCount: document.getElementById('dailyDashCount'),
-            longtermDashCount: document.getElementById('longtermDashCount'),
-            dailyBadge: document.getElementById('dailyBadge'),
-            longtermBadge: document.getElementById('longtermBadge'),
-            motto: document.getElementById('motto'),
+            greeting: document.getElementById('heroGreeting'),
+            title: document.getElementById('heroTitle'),
+            progressFill: document.getElementById('heroProgressFill'),
+            streak: document.getElementById('heroStreak'),
+            daily: document.getElementById('heroDaily'),
+            longterm: document.getElementById('heroLongterm'),
         };
-
-        // 设置圆环初始状态
-        if (els.ringFill) {
-            els.ringFill.style.strokeDasharray = CIRCUMFERENCE;
-            els.ringFill.style.strokeDashoffset = CIRCUMFERENCE;
-        }
 
         // 监听任务变化（只刷新今日相关数据）
         EventBus.on(Events.TASK_UPDATED, ({ date }) => {
@@ -62,45 +34,59 @@ export const Dashboard = {
         const tasks = await TaskService.getAll();
         const dailyCount = tasks.filter((t) => t.type === 'daily').length;
         const longtermCount = tasks.filter((t) => t.type === 'longterm').length;
+        const streak = await StreakService.getCurrentStreak();
 
-        // 圆环进度
-        this._updateRing(todayStats.rate);
+        // 问候语
+        this._setGreeting();
 
-        // 连续打卡
-        if (els.streakNum) {
-            els.streakNum.textContent = await StreakService.getCurrentStreak();
+        // 标题
+        if (els.title) {
+            const remaining = todayStats.total - todayStats.completed;
+            if (todayStats.total === 0) {
+                els.title.textContent = '今天还没有任务';
+            } else if (remaining === 0) {
+                els.title.textContent = '🎉 今天的任务全部完成！';
+            } else {
+                els.title.textContent = `今天还剩 ${remaining} 项任务`;
+            }
         }
 
-        // 任务数量
-        if (els.dailyDashCount) els.dailyDashCount.textContent = dailyCount;
-        if (els.longtermDashCount) els.longtermDashCount.textContent = longtermCount;
-        if (els.dailyBadge) els.dailyBadge.textContent = dailyCount;
-        if (els.longtermBadge) els.longtermBadge.textContent = longtermCount;
+        // 进度条
+        if (els.progressFill) {
+            els.progressFill.style.width = `${todayStats.rate}%`;
+            // 根据完成率变色
+            if (todayStats.rate >= 80) {
+                els.progressFill.style.background = 'var(--success)';
+            } else if (todayStats.rate >= 50) {
+                els.progressFill.style.background = 'var(--warning)';
+            } else {
+                els.progressFill.style.background = 'var(--primary)';
+            }
+        }
 
-        // 每日一句
-        this._setMotto();
+        // 统计数字
+        if (els.streak) els.streak.textContent = streak;
+        if (els.daily) els.daily.textContent = dailyCount;
+        if (els.longterm) els.longterm.textContent = longtermCount;
     },
 
-    _updateRing(percent) {
-        if (!els.ringFill) return;
-        const offset = CIRCUMFERENCE - (percent / 100) * CIRCUMFERENCE;
-        els.ringFill.style.strokeDashoffset = offset;
-        if (els.ringPercent) els.ringPercent.textContent = `${percent}%`;
-
-        // 根据完成率改变颜色
-        if (percent >= 80) {
-            els.ringFill.style.stroke = '#10b981';
-        } else if (percent >= 50) {
-            els.ringFill.style.stroke = '#f59e0b';
+    _setGreeting() {
+        if (!els.greeting) return;
+        const hour = new Date().getHours();
+        let icon, text;
+        if (hour < 6) {
+            icon = '🌙';
+            text = '夜深了';
+        } else if (hour < 12) {
+            icon = '☀️';
+            text = '早上好';
+        } else if (hour < 18) {
+            icon = '☀️';
+            text = '下午好';
         } else {
-            els.ringFill.style.stroke = '#6366f1';
+            icon = '🌅';
+            text = '晚上好';
         }
-    },
-
-    _setMotto() {
-        if (els.motto) {
-            const index = getDayOfYear() % MOTTOS.length;
-            els.motto.textContent = MOTTOS[index];
-        }
+        els.greeting.textContent = `${icon} ${text}`;
     },
 };

@@ -13,6 +13,33 @@
     color: var(--text-primary);
 }
 
+/* ---- 本周表现卡片 ---- */
+.week-summary-card {
+    border-left: 4px solid var(--primary);
+}
+
+.week-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    text-align: center;
+}
+
+.week-summary-item .ws-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    display: block;
+}
+
+.week-summary-item .ws-label {
+    font-size: var(--font-xs);
+    color: var(--text-placeholder);
+    margin-top: 6px;
+    display: block;
+}
+
 /* ---- 7天柱状图 ---- */
 .week-chart {
     display: flex;
@@ -226,8 +253,8 @@
 }
 
 .heatmap-cell {
-    width: 13px;
-    height: 13px;
+    width: 12px;
+    height: 12px;
     border-radius: 2px;
     background: var(--border-subtle);
     transition: transform 0.1s;
@@ -236,7 +263,7 @@
 }
 
 .heatmap-cell:hover {
-    transform: scale(1.4);
+    transform: scale(1.3);
     z-index: 1;
 }
 
@@ -288,6 +315,30 @@
 
 .heatmap-legend .heatmap-cell:hover {
     transform: none;
+}
+
+/* ---- 热力图空状态 ---- */
+.heatmap-empty {
+    text-align: center;
+    padding: 28px 16px;
+}
+
+.heatmap-empty-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.heatmap-empty-title {
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.heatmap-empty-sub {
+    font-size: var(--font-sm);
+    color: var(--text-placeholder);
 }
 
 /* ---- 弹窗 ---- */

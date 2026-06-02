@@ -16,62 +16,28 @@
     </head>
     <body>
         <div class="container">
-            <!-- 顶部仪表盘 -->
-            <header class="dashboard">
-                <div class="dashboard-title">
-                    <h1>📚 Study Tracker</h1>
-                    <p class="motto" id="motto"></p>
+            <!-- 顶部英雄卡片 -->
+            <header class="hero-card" id="heroCard">
+                <div class="hero-greeting" id="heroGreeting">☀️ 下午好</div>
+                <h2 class="hero-title" id="heroTitle">今天还没有任务</h2>
+                <div class="hero-progress">
+                    <div class="hero-progress-bar">
+                        <div class="hero-progress-fill" id="heroProgressFill"></div>
+                    </div>
                 </div>
-                <div class="dashboard-cards">
-                    <!-- 圆环进度条 -->
-                    <div class="dash-card progress-ring-card">
-                        <svg class="progress-ring" viewBox="0 0 100 100">
-                            <circle class="ring-bg" cx="50" cy="50" r="42" />
-                            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="42" />
-                        </svg>
-                        <div class="ring-center">
-                            <span class="ring-percent" id="ringPercent">0%</span>
-                            <span class="ring-label">今日</span>
-                        </div>
-                    </div>
-                    <!-- 连续打卡 -->
-                    <div class="dash-card streak-card">
-                        <span class="streak-icon">🔥</span>
-                        <span class="streak-num" id="streakNum">0</span>
-                        <span class="streak-label">连续打卡</span>
-                    </div>
-                    <!-- 每日任务数 -->
-                    <div class="dash-card count-card">
-                        <span class="count-icon">📅</span>
-                        <span class="count-num" id="dailyDashCount">0</span>
-                        <span class="count-label">每日任务</span>
-                    </div>
-                    <!-- 长期任务数 -->
-                    <div class="dash-card count-card">
-                        <span class="count-icon">🎯</span>
-                        <span class="count-num" id="longtermDashCount">0</span>
-                        <span class="count-label">长期任务</span>
-                    </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">🔥 <span id="heroStreak">0</span>天</div>
+                    <div class="hero-stat">📅 <span id="heroDaily">0</span>项</div>
+                    <div class="hero-stat">🎯 <span id="heroLongterm">0</span>项</div>
                 </div>
             </header>
 
-            <!-- Tab 切换 -->
-            <div class="tabs">
-                <button class="tab active" data-type="daily">
-                    <span class="tab-icon">📅</span>
-                    每日
-                    <span class="tab-badge" id="dailyBadge">0</span>
-                </button>
-                <button class="tab" data-type="longterm">
-                    <span class="tab-icon">🎯</span>
-                    长期
-                    <span class="tab-badge" id="longtermBadge">0</span>
-                </button>
-                <button class="tab" data-type="stats">
-                    <span class="tab-icon">📊</span>
-                    统计
-                </button>
-            </div>
+            <!-- Tab 导航 -->
+            <nav class="tabs">
+                <button class="tab active" data-type="daily">每日任务</button>
+                <button class="tab" data-type="longterm">长期任务</button>
+                <button class="tab" data-type="stats">统计</button>
+            </nav>
 
             <!-- 搜索栏 -->
             <div class="search-area">
@@ -80,7 +46,7 @@
             </div>
 
             <!-- 输入区域 -->
-            <div class="input-area glass-card" id="inputArea">
+            <div class="input-area" id="inputArea">
                 <input type="text" id="taskInput" placeholder="添加新任务..." autofocus />
                 <div class="input-options">
                     <select id="prioritySelect">
@@ -115,19 +81,28 @@
 
             <!-- 统计页面 -->
             <div id="statsSection" class="task-section hidden">
-                <div class="stats-card glass-card">
+                <!-- 本周表现 -->
+                <div class="stats-card week-summary-card">
+                    <h3>📈 本周表现</h3>
+                    <div class="week-summary-grid" id="weekSummary"></div>
+                </div>
+                <!-- 最近7天 -->
+                <div class="stats-card">
+                    <h3>📊 最近7天完成率</h3>
+                    <div class="week-chart" id="weekChart"></div>
+                </div>
+                <!-- 热力图 -->
+                <div class="stats-card">
                     <h3>🟩 学习热力图</h3>
                     <div class="heatmap-container" id="heatmap"></div>
                 </div>
-                <div class="stats-card glass-card">
-                    <h3>📈 最近7天完成率</h3>
-                    <div class="week-chart" id="weekChart"></div>
-                </div>
-                <div class="stats-card glass-card">
+                <!-- 本月统计 -->
+                <div class="stats-card">
                     <h3>📊 本月统计</h3>
                     <div class="month-stats" id="monthStats"></div>
                 </div>
-                <div class="stats-card glass-card">
+                <!-- 每日记录 -->
+                <div class="stats-card">
                     <h3>🗓️ 每日完成率记录</h3>
                     <div class="history-list" id="historyList"></div>
                 </div>

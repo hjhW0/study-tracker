@@ -1,11 +1,13 @@
 /**
  * 统计页面 UI
- * 负责渲染7天柱状图、月度统计、历史记录列表
+ * 负责热力图、7天柱状图、月度统计、本周表现等
  */
 
 import { StatsService } from '../services/statsService.js';
+import { StreakService } from '../services/streakService.js';
 import { EventBus, Events } from '../utils/eventBus.js';
 
+const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const MONTH_NAMES = [
     '1月',
     '2月',
@@ -20,219 +22,227 @@ const MONTH_NAMES = [
     '11月',
     '12月',
 ];
-const DAY_LABELS = ['', '周一', '', '周三', '', '周五', ''];
-
-// 监听任务变化 → 刷新热力图
-EventBus.on(Events.TASK_UPDATED, () => {
-    StatsPage._renderHeatmap();
-});
 
 export const StatsPage = {
-    async render() {
-        await this._renderHeatmap();
-        await this._renderWeekChart();
-        await this._renderMonthStats();
-        await this._renderHistoryList();
+    init() {
+        // 监听任务变化，自动刷新统计
+        EventBus.on(Events.TASK_UPDATED, () => {
+            StatsPage.render();
+        });
     },
 
-    async _renderWeekChart() {
-        const container = document.getElementById('weekChart');
-        if (!container) return;
+    async render() {
+        await Promise.all([
+            this._renderWeekSummary(),
+            this._renderWeekChart(),
+            this._renderHeatmap(),
+            this._renderMonthStats(),
+            this._renderHistory(),
+        ]);
+    },
 
-        const last7 = await StatsService.getRecentDays(7);
-        container.innerHTML = '';
+    // ---- 本周表现 ----
+    async _renderWeekSummary() {
+        const el = document.getElementById('weekSummary');
+        if (!el) return;
+
+        const history = await StatsService.getHistory();
+        const streak = await StreakService.getCurrentStreak();
+
+        // 最近7天
+        const last7 = history.slice(-7);
+        const totalCompleted = last7.reduce((sum, d) => sum + (d.completed || 0), 0);
+        const avgRate =
+            last7.length > 0
+                ? Math.round(last7.reduce((sum, d) => sum + d.rate, 0) / last7.length)
+                : 0;
+
+        el.innerHTML = `
+            <div class="week-summary-item">
+                <span class="ws-value">${totalCompleted}</span>
+                <span class="ws-label">完成任务</span>
+            </div>
+            <div class="week-summary-item">
+                <span class="ws-value">${avgRate}%</span>
+                <span class="ws-label">平均完成率</span>
+            </div>
+            <div class="week-summary-item">
+                <span class="ws-value">${streak}</span>
+                <span class="ws-label">连续学习</span>
+            </div>
+        `;
+    },
+
+    // ---- 7天柱状图 ----
+    async _renderWeekChart() {
+        const el = document.getElementById('weekChart');
+        if (!el) return;
+
+        const history = await StatsService.getHistory();
+        const last7 = history.slice(-7);
 
         if (last7.length === 0) {
-            container.innerHTML =
-                '<div class="no-data" style="width:100%">暂无数据，完成每日任务后自动记录</div>';
+            el.innerHTML = '<p class="no-data">🌱 开始学习后这里会显示数据</p>';
             return;
         }
 
-        last7.forEach((day) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'chart-bar-wrapper';
+        el.innerHTML = last7
+            .map((day) => {
+                const height = Math.max(3, (day.rate / 100) * 130);
+                let rateClass = 'rate-none';
+                if (day.rate >= 80) rateClass = 'rate-high';
+                else if (day.rate >= 50) rateClass = 'rate-mid';
+                else if (day.rate > 0) rateClass = 'rate-low';
 
-            const value = document.createElement('span');
-            value.className = 'chart-value';
-            value.textContent = `${day.rate}%`;
+                const dateObj = new Date(day.date + 'T00:00:00');
+                const label = DAY_NAMES[dateObj.getDay()];
 
-            const bar = document.createElement('div');
-            bar.className = 'chart-bar';
-            bar.style.height = `${Math.max(day.rate, 3)}%`;
-
-            if (day.rate >= 80) bar.classList.add('rate-high');
-            else if (day.rate >= 50) bar.classList.add('rate-mid');
-            else if (day.rate > 0) bar.classList.add('rate-low');
-            else bar.classList.add('rate-none');
-
-            const label = document.createElement('span');
-            label.className = 'chart-label';
-            label.textContent = day.date.slice(5);
-
-            wrapper.appendChild(value);
-            wrapper.appendChild(bar);
-            wrapper.appendChild(label);
-            container.appendChild(wrapper);
-        });
+                return `
+                <div class="chart-bar-wrapper">
+                    <span class="chart-value">${day.rate}%</span>
+                    <div class="chart-bar ${rateClass}" style="height: ${height}px"></div>
+                    <span class="chart-label">${label}</span>
+                </div>`;
+            })
+            .join('');
     },
 
+    // ---- 热力图 ----
     async _renderHeatmap() {
-        const container = document.getElementById('heatmap');
-        if (!container) return;
+        const el = document.getElementById('heatmap');
+        if (!el) return;
 
         const weeks = await StatsService.getHeatmapData();
-        container.innerHTML = '';
 
-        if (weeks.length === 0) {
-            container.innerHTML = '<div class="no-data">暂无数据，完成每日任务后自动记录</div>';
+        // 空状态
+        const hasData = weeks.some((w) => w.days.some((d) => !d.isFuture && d.level > 0));
+        if (!hasData) {
+            el.innerHTML = `
+                <div class="heatmap-empty">
+                    <span class="heatmap-empty-icon">🌱</span>
+                    <div class="heatmap-empty-title">开始你的学习旅程</div>
+                    <div class="heatmap-empty-sub">完成今天的第一个任务，这里会留下成长记录</div>
+                </div>`;
             return;
         }
 
-        // 月份标签行
-        const monthsRow = document.createElement('div');
-        monthsRow.className = 'heatmap-months';
+        // 月份标签
+        let monthsHtml = '<div class="heatmap-months">';
         let lastMonth = -1;
         weeks.forEach((week) => {
-            const firstDay = week[0];
-            const m = new Date(firstDay.date).getMonth();
-            if (m !== lastMonth) {
-                const span = document.createElement('span');
-                span.textContent = MONTH_NAMES[m];
-                span.style.width = 'auto';
-                monthsRow.appendChild(span);
-                lastMonth = m;
-            } else {
-                const span = document.createElement('span');
-                span.textContent = '';
-                monthsRow.appendChild(span);
+            const firstDay = week.days.find((d) => d.date);
+            if (firstDay) {
+                const m = new Date(firstDay.date + 'T00:00:00').getMonth();
+                if (m !== lastMonth) {
+                    monthsHtml += `<span>${MONTH_NAMES[m]}</span>`;
+                    lastMonth = m;
+                } else {
+                    monthsHtml += '<span></span>';
+                }
             }
         });
-
-        // 热力图主体
-        const heatmapWrapper = document.createElement('div');
-        heatmapWrapper.className = 'heatmap';
+        monthsHtml += '</div>';
 
         // 星期标签
-        const labels = document.createElement('div');
-        labels.className = 'heatmap-labels';
-        DAY_LABELS.forEach((label) => {
-            const span = document.createElement('span');
-            span.textContent = label;
-            labels.appendChild(span);
-        });
-        heatmapWrapper.appendChild(labels);
+        const dayLabels =
+            '<div class="heatmap-labels"><span></span><span>一</span><span></span><span>三</span><span></span><span>五</span><span></span></div>';
 
-        // 每周列
+        // 网格
+        let gridHtml = '';
         weeks.forEach((week) => {
-            const col = document.createElement('div');
-            col.className = 'heatmap-week';
-            week.forEach((day) => {
-                const cell = document.createElement('div');
-                cell.className = 'heatmap-cell';
-                cell.dataset.date = day.date;
+            gridHtml += '<div class="heatmap-week">';
+            week.days.forEach((day) => {
                 if (day.isFuture) {
-                    cell.style.opacity = '0.3';
-                } else if (day.level > 0) {
-                    cell.classList.add(`level-${day.level}`);
+                    gridHtml += '<div class="heatmap-cell" style="visibility:hidden"></div>';
+                } else {
+                    const levelClass = day.level > 0 ? ` level-${day.level}` : '';
+                    const tooltip = `${day.date} · ${day.rate}%`;
+                    gridHtml += `<div class="heatmap-cell${levelClass}" data-tooltip="${tooltip}" data-date="${day.date}"></div>`;
                 }
-                cell.setAttribute('data-tooltip', `${day.date}: ${day.rate}%`);
-                // 点击打开当天任务弹窗
-                if (!day.isFuture) {
-                    cell.addEventListener('click', () => {
-                        EventBus.emit(Events.DATE_SELECTED, { date: day.date });
-                    });
-                }
-                col.appendChild(cell);
             });
-            heatmapWrapper.appendChild(col);
+            gridHtml += '</div>';
         });
 
         // 图例
-        const legend = document.createElement('div');
-        legend.className = 'heatmap-legend';
-        legend.innerHTML = '<span>少</span>';
-        for (let i = 0; i <= 4; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'heatmap-cell';
-            if (i > 0) cell.classList.add(`level-${i}`);
-            legend.appendChild(cell);
-        }
-        legend.innerHTML += '<span>多</span>';
+        const legend = `
+            <div class="heatmap-legend">
+                <span>少</span>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell level-1"></div>
+                <div class="heatmap-cell level-2"></div>
+                <div class="heatmap-cell level-3"></div>
+                <div class="heatmap-cell level-4"></div>
+                <span>多</span>
+            </div>`;
 
-        container.appendChild(monthsRow);
-        container.appendChild(heatmapWrapper);
-        container.appendChild(legend);
+        el.innerHTML = `${monthsHtml}<div class="heatmap">${dayLabels}${gridHtml}</div>${legend}`;
+
+        // 点击事件
+        el.querySelectorAll('.heatmap-cell[data-date]').forEach((cell) => {
+            cell.addEventListener('click', () => {
+                EventBus.emit(Events.DATE_SELECTED, { date: cell.dataset.date });
+            });
+        });
     },
 
+    // ---- 月度统计 ----
     async _renderMonthStats() {
-        const container = document.getElementById('monthStats');
-        if (!container) return;
+        const el = document.getElementById('monthStats');
+        if (!el) return;
 
-        const stats = await StatsService.getMonthlyStats();
-        container.innerHTML = '';
+        const history = await StatsService.getHistory();
+        const now = new Date();
+        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const monthDays = history.filter((h) => h.date.startsWith(ym));
 
-        if (stats.totalDays === 0) {
-            container.innerHTML = '<div class="no-data">本月暂无数据</div>';
+        if (monthDays.length === 0) {
+            el.innerHTML = '<p class="no-data">本月暂无记录</p>';
             return;
         }
 
-        const rows = [
-            { label: '记录天数', value: `${stats.totalDays} 天` },
-            { label: '达标天数 (≥80%)', value: `${stats.goodDays} 天` },
-            { label: '平均完成率', value: `${stats.avgRate}%` },
-            { label: '最高完成率', value: `${stats.maxRate}%` },
-            { label: '最低完成率', value: `${stats.minRate}%` },
-        ];
+        const avgRate = Math.round(monthDays.reduce((s, d) => s + d.rate, 0) / monthDays.length);
+        const bestDay = monthDays.reduce(
+            (best, d) => (d.rate > best.rate ? d : best),
+            monthDays[0],
+        );
+        const totalTasks = monthDays.reduce((s, d) => s + (d.completed || 0), 0);
 
-        rows.forEach((row) => {
-            const div = document.createElement('div');
-            div.className = 'stat-row';
-            div.innerHTML = `<span class="stat-label">${row.label}</span><span class="stat-value">${row.value}</span>`;
-            container.appendChild(div);
-        });
+        el.innerHTML = `
+            <div class="stat-row"><span class="stat-label">记录天数</span><span class="stat-value">${monthDays.length} 天</span></div>
+            <div class="stat-row"><span class="stat-label">平均完成率</span><span class="stat-value">${avgRate}%</span></div>
+            <div class="stat-row"><span class="stat-label">最佳单日</span><span class="stat-value">${bestDay.date} (${bestDay.rate}%)</span></div>
+            <div class="stat-row"><span class="stat-label">完成任务数</span><span class="stat-value">${totalTasks} 项</span></div>
+        `;
     },
 
-    async _renderHistoryList() {
-        const container = document.getElementById('historyList');
-        if (!container) return;
+    // ---- 每日完成率记录 ----
+    async _renderHistory() {
+        const el = document.getElementById('historyList');
+        if (!el) return;
 
-        const history = await StatsService.getHistoryReversed();
-        container.innerHTML = '';
+        const history = await StatsService.getHistory();
+        const last14 = history.slice(-14).reverse();
 
-        if (history.length === 0) {
-            container.innerHTML = '<div class="no-data">暂无记录</div>';
+        if (last14.length === 0) {
+            el.innerHTML = '<p class="no-data">暂无记录</p>';
             return;
         }
 
-        history.forEach((day) => {
-            const row = document.createElement('div');
-            row.className = 'history-row';
+        el.innerHTML = last14
+            .map((day) => {
+                let barClass = 'rate-low';
+                if (day.rate >= 80) barClass = 'rate-high';
+                else if (day.rate >= 50) barClass = 'rate-mid';
 
-            const dateEl = document.createElement('span');
-            dateEl.className = 'history-date';
-            dateEl.textContent = day.date;
-
-            const barWrapper = document.createElement('div');
-            barWrapper.className = 'history-bar-wrapper';
-
-            const bar = document.createElement('div');
-            bar.className = 'history-bar';
-            bar.style.width = `${Math.max(day.rate, 2)}%`;
-
-            if (day.rate >= 80) bar.classList.add('rate-high');
-            else if (day.rate >= 50) bar.classList.add('rate-mid');
-            else bar.classList.add('rate-low');
-
-            barWrapper.appendChild(bar);
-
-            const rateEl = document.createElement('span');
-            rateEl.className = 'history-rate';
-            rateEl.textContent = `${day.rate}%`;
-
-            row.appendChild(dateEl);
-            row.appendChild(barWrapper);
-            row.appendChild(rateEl);
-            container.appendChild(row);
-        });
+                return `
+                <div class="history-row">
+                    <span class="history-date">${day.date}</span>
+                    <div class="history-bar-wrapper">
+                        <div class="history-bar ${barClass}" style="width: ${day.rate}%"></div>
+                    </div>
+                    <span class="history-rate">${day.rate}%</span>
+                </div>`;
+            })
+            .join('');
     },
 };
