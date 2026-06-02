@@ -21,6 +21,7 @@ const ASSETS = [
     './src/ui/dashboard.js',
     './src/ui/taskList.js',
     './src/ui/statsPage.js',
+    './src/ui/modal/dayTasksModal.js',
     './src/utils/date.js',
     './src/utils/eventBus.js',
     './src/utils/helpers.js',

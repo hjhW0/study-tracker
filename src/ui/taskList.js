@@ -12,8 +12,8 @@ let searchKeyword = '';
 
 export const TaskList = {
     init() {
-        // 监听数据变化
-        EventBus.on(Events.DATA_CHANGED, () => this.render());
+        // 监听任务变化
+        EventBus.on(Events.TASK_UPDATED, () => this.render());
         EventBus.on(Events.TAB_SWITCHED, ({ type }) => {
             currentType = type;
             this.render();

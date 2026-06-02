@@ -4,9 +4,32 @@
  */
 
 import { StatsService } from '../services/statsService.js';
+import { EventBus, Events } from '../utils/eventBus.js';
+
+const MONTH_NAMES = [
+    '1月',
+    '2月',
+    '3月',
+    '4月',
+    '5月',
+    '6月',
+    '7月',
+    '8月',
+    '9月',
+    '10月',
+    '11月',
+    '12月',
+];
+const DAY_LABELS = ['', '周一', '', '周三', '', '周五', ''];
+
+// 监听任务变化 → 刷新热力图
+EventBus.on(Events.TASK_UPDATED, () => {
+    StatsPage._renderHeatmap();
+});
 
 export const StatsPage = {
     async render() {
+        await this._renderHeatmap();
         await this._renderWeekChart();
         await this._renderMonthStats();
         await this._renderHistoryList();
@@ -51,6 +74,94 @@ export const StatsPage = {
             wrapper.appendChild(label);
             container.appendChild(wrapper);
         });
+    },
+
+    async _renderHeatmap() {
+        const container = document.getElementById('heatmap');
+        if (!container) return;
+
+        const weeks = await StatsService.getHeatmapData();
+        container.innerHTML = '';
+
+        if (weeks.length === 0) {
+            container.innerHTML = '<div class="no-data">暂无数据，完成每日任务后自动记录</div>';
+            return;
+        }
+
+        // 月份标签行
+        const monthsRow = document.createElement('div');
+        monthsRow.className = 'heatmap-months';
+        let lastMonth = -1;
+        weeks.forEach((week) => {
+            const firstDay = week[0];
+            const m = new Date(firstDay.date).getMonth();
+            if (m !== lastMonth) {
+                const span = document.createElement('span');
+                span.textContent = MONTH_NAMES[m];
+                span.style.width = 'auto';
+                monthsRow.appendChild(span);
+                lastMonth = m;
+            } else {
+                const span = document.createElement('span');
+                span.textContent = '';
+                monthsRow.appendChild(span);
+            }
+        });
+
+        // 热力图主体
+        const heatmapWrapper = document.createElement('div');
+        heatmapWrapper.className = 'heatmap';
+
+        // 星期标签
+        const labels = document.createElement('div');
+        labels.className = 'heatmap-labels';
+        DAY_LABELS.forEach((label) => {
+            const span = document.createElement('span');
+            span.textContent = label;
+            labels.appendChild(span);
+        });
+        heatmapWrapper.appendChild(labels);
+
+        // 每周列
+        weeks.forEach((week) => {
+            const col = document.createElement('div');
+            col.className = 'heatmap-week';
+            week.forEach((day) => {
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell';
+                cell.dataset.date = day.date;
+                if (day.isFuture) {
+                    cell.style.opacity = '0.3';
+                } else if (day.level > 0) {
+                    cell.classList.add(`level-${day.level}`);
+                }
+                cell.setAttribute('data-tooltip', `${day.date}: ${day.rate}%`);
+                // 点击打开当天任务弹窗
+                if (!day.isFuture) {
+                    cell.addEventListener('click', () => {
+                        EventBus.emit(Events.DATE_SELECTED, { date: day.date });
+                    });
+                }
+                col.appendChild(cell);
+            });
+            heatmapWrapper.appendChild(col);
+        });
+
+        // 图例
+        const legend = document.createElement('div');
+        legend.className = 'heatmap-legend';
+        legend.innerHTML = '<span>少</span>';
+        for (let i = 0; i <= 4; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'heatmap-cell';
+            if (i > 0) cell.classList.add(`level-${i}`);
+            legend.appendChild(cell);
+        }
+        legend.innerHTML += '<span>多</span>';
+
+        container.appendChild(monthsRow);
+        container.appendChild(heatmapWrapper);
+        container.appendChild(legend);
     },
 
     async _renderMonthStats() {

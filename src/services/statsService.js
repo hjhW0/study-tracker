@@ -80,4 +80,60 @@ export const StatsService = {
         const history = await Storage.loadHistory();
         return [...history].reverse();
     },
+
+    /**
+     * 获取热力图数据（最近365天）
+     * 返回按周分组的数组，每周7天（周日开始）
+     */
+    async getHeatmapData() {
+        const history = await Storage.loadHistory();
+        const rateMap = {};
+        history.forEach((h) => {
+            rateMap[h.date] = h.rate;
+        });
+
+        const today = new Date();
+        const endDate = new Date(today);
+
+        // 找到本周日（结束日）
+        const dayOfWeek = today.getDay();
+        endDate.setDate(today.getDate() + (6 - dayOfWeek));
+
+        // 往前推52周
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - 52 * 7 + 1);
+
+        const weeks = [];
+        let currentWeek = [];
+        const d = new Date(startDate);
+
+        while (d <= endDate) {
+            const dateStr = d.toISOString().slice(0, 10);
+            const rate = rateMap[dateStr];
+            let level = 0;
+            if (rate > 0) level = 1;
+            if (rate >= 40) level = 2;
+            if (rate >= 70) level = 3;
+            if (rate >= 90) level = 4;
+
+            currentWeek.push({
+                date: dateStr,
+                rate: rate ?? 0,
+                level,
+                isFuture: d > today,
+            });
+
+            if (currentWeek.length === 7) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+            }
+            d.setDate(d.getDate() + 1);
+        }
+
+        if (currentWeek.length > 0) {
+            weeks.push(currentWeek);
+        }
+
+        return weeks;
+    },
 };

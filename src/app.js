@@ -9,6 +9,7 @@ import { StatsService } from './services/statsService.js';
 import { Dashboard } from './ui/dashboard.js';
 import { TaskList } from './ui/taskList.js';
 import { StatsPage } from './ui/statsPage.js';
+import { DayTasksModal } from './ui/modal/dayTasksModal.js';
 
 // ---- 当前状态 ----
 let currentType = 'daily';
@@ -77,6 +78,17 @@ async function init() {
 
     searchInput.addEventListener('input', (e) => {
         TaskList.setSearchKeyword(e.target.value.trim());
+    });
+
+    // 热力图点击 → 打开任务弹窗
+    EventBus.on(Events.DATE_SELECTED, ({ date }) => {
+        DayTasksModal.open(date);
+    });
+
+    // 任务变化 → 自动保存今日进度（统一入口）
+    EventBus.on(Events.TASK_UPDATED, ({ date }) => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (date === today) StatsService.saveTodayProgress();
     });
 
     deadlineInput.style.display = 'none';

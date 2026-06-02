@@ -170,3 +170,456 @@
     color: var(--text-disabled);
     font-size: var(--font-base);
 }
+
+/* ---- 热力图 ---- */
+.heatmap-container {
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.heatmap-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.heatmap-container::-webkit-scrollbar-thumb {
+    background: var(--text-disabled);
+    border-radius: 4px;
+}
+
+.heatmap {
+    display: inline-flex;
+    gap: 3px;
+}
+
+.heatmap-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-right: 6px;
+    justify-content: space-between;
+}
+
+.heatmap-labels span {
+    font-size: 10px;
+    color: var(--text-placeholder);
+    height: 13px;
+    line-height: 13px;
+}
+
+.heatmap-months {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 6px;
+    margin-left: 30px;
+}
+
+.heatmap-months span {
+    font-size: 10px;
+    color: var(--text-placeholder);
+    min-width: 26px;
+}
+
+.heatmap-week {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.heatmap-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 2px;
+    background: var(--border-subtle);
+    transition: transform 0.1s;
+    cursor: pointer;
+    position: relative;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.4);
+    z-index: 1;
+}
+
+.heatmap-cell[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-primary);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.heatmap-cell.level-1 {
+    background: #9be9a8;
+}
+
+.heatmap-cell.level-2 {
+    background: #40c463;
+}
+
+.heatmap-cell.level-3 {
+    background: #30a14e;
+}
+
+.heatmap-cell.level-4 {
+    background: #216e39;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    justify-content: flex-end;
+    font-size: 10px;
+    color: var(--text-placeholder);
+}
+
+.heatmap-legend .heatmap-cell {
+    cursor: default;
+}
+
+.heatmap-legend .heatmap-cell:hover {
+    transform: none;
+}
+
+/* ---- 弹窗 ---- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: modalFadeIn 0.2s ease;
+}
+
+.modal-overlay.closing {
+    animation: modalFadeOut 0.2s ease forwards;
+}
+
+.modal-panel {
+    background: var(--bg-card);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: modalSlideUp 0.25s ease;
+}
+
+.modal-overlay.closing .modal-panel {
+    animation: modalSlideDown 0.2s ease forwards;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-title {
+    font-size: var(--font-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-placeholder);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.modal-close:hover {
+    background: var(--border-subtle);
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--text-disabled);
+    border-radius: 4px;
+}
+
+.modal-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bg-page);
+    transition: all 0.2s;
+}
+
+.modal-task-item.completed {
+    opacity: 0.5;
+}
+
+.modal-task-item.completed .modal-task-text {
+    text-decoration: line-through;
+    color: var(--text-placeholder);
+}
+
+.modal-checkbox {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1px;
+}
+
+.modal-checkbox:hover {
+    border-color: var(--primary);
+}
+
+.modal-checkbox svg {
+    width: 14px;
+    height: 14px;
+    color: var(--success);
+}
+
+.modal-checkbox.check-animate {
+    animation: checkBounce 0.4s ease;
+}
+
+.modal-task-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.modal-priority-dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+}
+
+.modal-task-text {
+    font-size: var(--font-base);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.modal-task-tags {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.modal-tag {
+    font-size: 11px;
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.modal-empty {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text-disabled);
+    font-size: var(--font-base);
+}
+
+.modal-history-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--font-base);
+}
+
+.modal-stat-row:last-of-type {
+    border-bottom: none;
+}
+
+.modal-stat-label {
+    color: var(--text-placeholder);
+}
+
+.modal-stat-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-hint {
+    text-align: center;
+    padding: 12px 0 4px;
+    color: var(--text-disabled);
+    font-size: var(--font-xs);
+}
+
+.modal-footer {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px 16px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.modal-btn:hover {
+    background: var(--bg-page);
+}
+
+.modal-btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.modal-btn-primary:hover {
+    opacity: 0.9;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes modalSlideDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+}
+
+@keyframes checkBounce {
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.3);
+    }
+    60% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ---- 手机端底部抽屉 ---- */
+@media (max-width: 600px) {
+    .modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 70vh;
+        border-radius: 16px 16px 0 0;
+        position: fixed;
+        bottom: 0;
+        animation: drawerSlideUp 0.3s ease;
+    }
+
+    .modal-overlay.closing .modal-panel {
+        animation: drawerSlideDown 0.25s ease forwards;
+    }
+
+    .modal-overlay {
+        align-items: flex-end;
+    }
+}
+
+@keyframes drawerSlideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes drawerSlideDown {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(100%);
+    }
+}

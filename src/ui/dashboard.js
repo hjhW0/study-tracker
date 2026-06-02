@@ -7,7 +7,7 @@ import { StatsService } from '../services/statsService.js';
 import { StreakService } from '../services/streakService.js';
 import { TaskService } from '../services/taskService.js';
 import { EventBus, Events } from '../utils/eventBus.js';
-import { getDayOfYear } from '../utils/date.js';
+import { getDayOfYear, getToday } from '../utils/date.js';
 
 // ---- DOM 缓存 ----
 let els = {};
@@ -51,8 +51,10 @@ export const Dashboard = {
             els.ringFill.style.strokeDashoffset = CIRCUMFERENCE;
         }
 
-        // 监听数据变化
-        EventBus.on(Events.DATA_CHANGED, () => this.render());
+        // 监听任务变化（只刷新今日相关数据）
+        EventBus.on(Events.TASK_UPDATED, ({ date }) => {
+            if (date === getToday()) this.render();
+        });
     },
 
     async render() {

@@ -34,15 +34,13 @@ export const EventBus = {
  * 集中管理，避免拼写错误
  */
 export const Events = {
-    // 任务事件
-    TASK_ADDED: 'task:added',
-    TASK_TOGGLED: 'task:toggled',
-    TASK_DELETED: 'task:deleted',
-    TASKS_LOADED: 'task:loaded',
-
-    // 数据事件
-    DATA_CHANGED: 'data:changed',
+    // 任务事件（统一入口：任何任务状态变化都发 TASK_UPDATED）
+    TASK_UPDATED: 'task:updated', // { date }
 
     // 页面事件
     TAB_SWITCHED: 'tab:switched',
+
+    // 热力图交互
+    DATE_SELECTED: 'date:selected',
+    MODAL_CLOSED: 'modal:closed',
 };

@@ -58,6 +58,27 @@ export const TaskService = {
         return tasks.find((t) => t.id === id) || null;
     },
 
+    /**
+     * 获取某天的任务（仅当天可操作，历史日期返回只读数据）
+     */
+    async getTasksByDate(date) {
+        const today = getToday();
+        if (date === today) {
+            const tasks = await this.getByType('daily');
+            return { date, tasks, editable: true };
+        }
+        // 历史日期：从 history 拿统计，无具体任务列表
+        const { StatsService } = await import('./statsService.js');
+        const history = await StatsService.getHistory();
+        const record = history.find((h) => h.date === date);
+        return {
+            date,
+            tasks: [],
+            editable: false,
+            record: record || null,
+        };
+    },
+
     // ============ 搜索 & 筛选 ============
 
     async search(keyword, type) {
@@ -116,8 +137,7 @@ export const TaskService = {
         tasks.push(task);
         this._persist(tasks);
 
-        EventBus.emit(Events.TASK_ADDED, { task });
-        EventBus.emit(Events.DATA_CHANGED);
+        EventBus.emit(Events.TASK_UPDATED, { date: today });
 
         return task;
     },
@@ -132,8 +152,7 @@ export const TaskService = {
 
         this._persist(tasks);
 
-        EventBus.emit(Events.TASK_TOGGLED, { task });
-        EventBus.emit(Events.DATA_CHANGED);
+        EventBus.emit(Events.TASK_UPDATED, { date: getToday() });
 
         return task;
     },
@@ -143,8 +162,7 @@ export const TaskService = {
         _cache = tasks.filter((t) => t.id !== id);
         this._persist(_cache);
 
-        EventBus.emit(Events.TASK_DELETED, { taskId: id });
-        EventBus.emit(Events.DATA_CHANGED);
+        EventBus.emit(Events.TASK_UPDATED, { date: getToday() });
     },
 
     async update(id, changes) {
@@ -155,7 +173,7 @@ export const TaskService = {
         Object.assign(task, changes);
         this._persist(tasks);
 
-        EventBus.emit(Events.DATA_CHANGED);
+        EventBus.emit(Events.TASK_UPDATED, { date: getToday() });
         return task;
     },
 
