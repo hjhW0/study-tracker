@@ -1,7 +1,8 @@
-const CACHE_NAME = 'study-tracker-v1';
+const CACHE_NAME = 'study-tracker-v2';
 const ASSETS = [
     './',
     './index.html',
+    './.nojekyll',
     './manifest.json',
     './css/base.css',
     './css/dashboard.css',
